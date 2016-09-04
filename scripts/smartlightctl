@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+
+# smartLight AWOX control with Bluez
+#
+# Control an AWOX smartLight (BLE light bulb with BLE control) from command line
+#
+# needs: bluez and python bluepy module
+#
+# license: MIT
+
+from __future__ import print_function
+import sys
+import argparse
+from pySmartLightSmlC9 import SmartLight, btle
+
+# parse args
+parser = argparse.ArgumentParser()
+parser.add_argument('ble_addr', type=str, 
+                    help='light bluetooth LE address (like 98:7b:f3:61:17:c5)')
+parser.add_argument('command', type=str, choices=['on', 'off'],
+                    help='command to send at light')
+args = parser.parse_args()
+
+# connect to the light (BLE connect)
+try:
+    light = SmartLight(args.ble_addr)
+except btle.BTLEException as err:
+    sys.exit('error when connect to %s (code %d)' % (args.ble_addr, err.code))
+
+# set light on/off
+if args.command == 'on':
+    try:
+        is_ok = light.on()
+    except btle.BTLEException as err:
+        sys.exit('error when setting light %s on (code %d)' % (args.ble_addr, err.code))
+    print('smartLight is set on')
+elif args.command == 'off':
+    try:
+        is_ok = light.off()
+    except btle.BTLEException as err:
+        sys.exit('error when setting light %s off (code %d)' % (args.ble_addr, err.code))
+    print('smartLight is set off')
+
+# disconnect BLE
+light.disconnect()
+
+# exit without error
+sys.exit(0)
+
